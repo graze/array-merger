@@ -1,0 +1,61 @@
+language: php
+
+dist: trusty
+
+## Cache composer bits
+cache:
+  directories:
+    - $HOME/.composer/cache/files
+
+php:
+  - 5.6
+  - 7.0
+  - 7.1
+  - 7.2
+  - nightly
+
+env:
+  - PREFER_LOWEST=--prefer-lowest
+  - PREFER_LOWEST=
+
+matrix:
+  allow_failures:
+    - php: nightly
+
+before_script:
+  - composer config platform.php $(php -r "echo PHP_VERSION;")
+  - travis_retry composer update --no-interaction --prefer-dist $PREFER_LOWEST
+
+script:
+  - vendor/bin/phpcs -p --warning-severity=0 src/ tests/
+  - vendor/bin/phpunit --coverage-clover=./tests/report/coverage.clover
+
+after_script:
+  - test -f ./tests/report/coverage.clover && (wget https://scrutinizer-ci.com/ocular.phar; php ocular.phar code-coverage:upload --format=php-clover ./tests/report/coverage.clover)
+
+stages:
+  - test
+  - lint
+  - name: deploy
+    if: branch = master
+jobs:
+  include:
+  - stage: lint
+    name: "Markdown"
+    before_script: sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+    script: make lint-md
+    after_script: skip
+  - stage: deploy
+    name: "Deploy to GitHub Pages"
+    before_script: sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+    script: make docs-build
+    after_script: skip
+    deploy:
+      provider: pages
+      local-dir: site
+      skip-cleanup: true
+      keep-history: true
+      verbose: true
+      github-token: $GITHUB_TOKEN
+      on:
+        branch: master

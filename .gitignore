@@ -1,0 +1,6 @@
+/vendor/
+/tests/report/
+/site/
+
+.idea
+.vscode
