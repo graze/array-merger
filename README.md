@@ -9,6 +9,8 @@
 
 Array Merge allows you to recursively merge arrays and choose how the values should be merged.
 
+![Merge](https://media.giphy.com/media/cnEXDpXvkZ7lm/giphy.gif)
+
 ## Why?
 
 The php function: [`array_merge_recursive`](http://php.net/manual/en/function.array-merge-recursive.php)
