@@ -143,10 +143,18 @@ class ValueMergersTest extends TestCase
     public function randomDataProvider()
     {
         $merger = new RandomValue(1234);
-        return [
-            [$merger, "Left", "Right", "Left"],
-            [$merger, "Left", null, null],
-            [$merger, null, "Right", null],
-        ];
+        if (PHP_VERSION_ID >= 70100) {
+            return [
+                [$merger, "Left", "Right", "Left"],
+                [$merger, "Left", null, "Left"],
+                [$merger, null, "Right", "Right"],
+            ];
+        } else {
+            return [
+                [$merger, "Left", "Right", "Right"],
+                [$merger, "Left", null, "Left"],
+                [$merger, null, "Right", null],
+            ];
+        }
     }
 }

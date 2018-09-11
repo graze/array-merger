@@ -47,7 +47,7 @@ lint-php: ## Run phpcs against the code.
 	${DOCKER_RUN} vendor/bin/phpcs -p --warning-severity=0 src/ tests/
 
 lint-md: ## Run markdownlist against the documentation
-	${DOCKER} run --rm -v $$(pwd):/data:cached gouvinb/docker-markdownlint -v *.md docs/*.md docs/*/*.md
+	${DOCKER} run --rm -v $$(pwd):/data:cached gouvinb/docker-markdownlint -v *.md
 
 lint-fix: ## Run phpcsf and fix possible lint errors.
 	${DOCKER_RUN} vendor/bin/phpcbf -p src/ tests/
@@ -64,6 +64,7 @@ test-matrix-lowest: ## Test all version, with the lowest version
 	${MAKE} build-update
 
 test-matrix: ## Run the unit tests against multiple targets.
+	${MAKE} PHP_VER="5.5" IMAGE="php:5.5-alpine" build-update test
 	${MAKE} PHP_VER="5.6" build-update test
 	${MAKE} PHP_VER="7.0" build-update test
 	${MAKE} PHP_VER="7.1" build-update test

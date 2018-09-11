@@ -14,7 +14,7 @@ class RandomValue implements ValueMergerInterface
     public function __construct($seed = null)
     {
         if (!is_null($seed) && is_int($seed)) {
-            srand($seed);
+            mt_srand($seed);
         }
     }
 
@@ -28,6 +28,6 @@ class RandomValue implements ValueMergerInterface
      */
     public function merge($value1, $value2)
     {
-        return (rand(1, 2) == 1) ? $value1 : $value2;
+        return (mt_rand(1, 2) == 1) ? $value1 : $value2;
     }
 }

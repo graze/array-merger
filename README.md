@@ -1,4 +1,4 @@
-# array-merger
+# Array Merger
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/graze/array-merger.svg?style=flat-square)](https://packagist.org/packages/graze/array-merger)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
@@ -11,7 +11,7 @@ Array Merge allows you to recursively merge arrays and choose how the values sho
 
 ![Merge](https://media.giphy.com/media/cnEXDpXvkZ7lm/giphy.gif)
 
-## Why?
+## Why
 
 The php function: [`array_merge_recursive`](http://php.net/manual/en/function.array-merge-recursive.php)
 does indeed merge arrays, but it converts values with duplicate keys to arrays rather than overwriting the value in
@@ -91,10 +91,10 @@ RecursiveArrayMerger::lastNonNull(
 
 ```php
 $merger = new Graze\ArrayMerger\RecursiveArrayMerger(new LastNonNullValue());
-var_dump($merger->merge(
+$merger->merge(
     ['a' => 'first', 'b' => ['c' => 'cake', 'd' => 'fish']],
     ['a' => 'second', 'b' => ['d' => null]]
-));
+);
 
 // ['a' => 'second', 'b' => ['c' => 'cake', 'd' => 'first']]
 ```
@@ -108,6 +108,19 @@ RecursiveArrayMerger::mergeUsing(
     ['a' => 4, 'b' => ['d' => 1]]
 );
 // ['a' => 4, 'b' => ['c' => 2, 'd' => 3]]
+```
+
+### Sequential Arrays
+
+If instead of overwriting sequential arrays you can append them using a flag
+
+```php
+$merger = new Graze\ArrayMerger\RecursiveArrayMerger(new LastValue(), RecursiveArrayMerger::FLAG_APPEND_VALUE_ARRAY);
+$merger->merge(
+    ['a' => 'first', 'b' => ['a','c','d']],
+    ['a' => 'second', 'b' => ['e']]
+);
+// ['a' => 'second', 'b' => ['a','c','d','e']]
 ```
 
 ## Testing

@@ -67,6 +67,42 @@ class RecursiveArrayMergerTest extends TestCase
         );
     }
 
+    public function testSequentialTopLevelArraysAreAppended()
+    {
+        $a = ['first', 'second'];
+        $b = ['third', 'fourth'];
+
+        $merger = new RecursiveArrayMerger(new FirstValue());
+
+        $this->assertEquals(
+            ['first', 'second'],
+            $merger->merge($a, $b),
+            "Expected appended array"
+        );
+
+        $merger = new RecursiveArrayMerger(new FirstValue(), RecursiveArrayMerger::FLAG_APPEND_VALUE_ARRAY);
+
+        $this->assertEquals(
+            ['first', 'second', 'third', 'fourth'],
+            $merger->merge($a, $b),
+            "Expected appended array"
+        );
+    }
+
+    public function testSequentialChildArraysAreAppended()
+    {
+        $a = ['first' => ['child' => ['a', 'c', 'd']], 'second' => 2];
+        $b = ['first' => ['child' => ['b', 'e']], 'second' => null];
+
+        $merger = new RecursiveArrayMerger(new FirstValue(), RecursiveArrayMerger::FLAG_APPEND_VALUE_ARRAY);
+
+        $this->assertEquals(
+            ['first' => ['child' => ['a', 'c', 'd', 'b', 'e']], 'second' => 2],
+            $merger->merge($a, $b),
+            "Expected appended child array"
+        );
+    }
+
     public function testRecursiveFunctionality()
     {
         $a = ['first' => 1, 'second' => ['a' => 2, 'b' => 3]];

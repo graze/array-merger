@@ -8,6 +8,7 @@ cache:
     - $HOME/.composer/cache/files
 
 php:
+  - 5.5
   - 5.6
   - 7.0
   - 7.1
@@ -36,8 +37,6 @@ after_script:
 stages:
   - test
   - lint
-  - name: deploy
-    if: branch = master
 jobs:
   include:
   - stage: lint
@@ -45,17 +44,3 @@ jobs:
     before_script: sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
     script: make lint-md
     after_script: skip
-  - stage: deploy
-    name: "Deploy to GitHub Pages"
-    before_script: sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
-    script: make docs-build
-    after_script: skip
-    deploy:
-      provider: pages
-      local-dir: site
-      skip-cleanup: true
-      keep-history: true
-      verbose: true
-      github-token: $GITHUB_TOKEN
-      on:
-        branch: master

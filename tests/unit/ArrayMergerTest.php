@@ -67,6 +67,42 @@ class ArrayMergerTest extends TestCase
         );
     }
 
+    public function testSequentialTopLevelArraysAreAppended()
+    {
+        $a = ['first', 'second'];
+        $b = ['third', 'fourth'];
+
+        $merger = new ArrayMerger(new FirstValue());
+
+        $this->assertEquals(
+            ['first', 'second'],
+            $merger->merge($a, $b),
+            "Expected a non appended array when the flag is not set"
+        );
+
+        $merger = new ArrayMerger(new FirstValue(), ArrayMerger::FLAG_APPEND_VALUE_ARRAY);
+
+        $this->assertEquals(
+            ['first', 'second', 'third', 'fourth'],
+            $merger->merge($a, $b),
+            "Expected appended array"
+        );
+    }
+
+    public function testSequentialChildArraysAreAppended()
+    {
+        $a = ['first' => ['a','c','d'], 'second' => 2];
+        $b = ['first' => ['b','e'], 'second' => null];
+
+        $merger = new ArrayMerger(new FirstValue(), ArrayMerger::FLAG_APPEND_VALUE_ARRAY);
+
+        $this->assertEquals(
+            ['first' => ['a','c','d','b','e'], 'second' => 2],
+            $merger->merge($a, $b),
+            "Expected appended child array"
+        );
+    }
+
     public function testNonRecursiveFunctionality()
     {
         $a = ['first' => 1, 'second' => ['a' => 2, 'b' => 3]];

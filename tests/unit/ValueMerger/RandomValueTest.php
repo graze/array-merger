@@ -11,15 +11,28 @@ class RandomValueTest extends TestCase
     {
         $merger = new RandomValue(2345);
 
-        $this->assertEquals('left', $merger('left', 'right'));
-        $this->assertEquals('right', $merger('left', 'right'));
-        $this->assertEquals('left', $merger('left', 'right'));
-        $this->assertEquals('left', $merger('left', 'right'));
-        $this->assertEquals('left', $merger('left', 'right'));
-        $this->assertEquals('right', $merger('left', 'right'));
-        $this->assertEquals('right', $merger('left', 'right'));
-        $this->assertEquals('left', $merger('left', 'right'));
-        $this->assertEquals('left', $merger('left', 'right'));
-        $this->assertEquals('left', $merger('left', 'right'));
+        if (PHP_VERSION_ID >= 70100) {
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('right', $merger('left', 'right'));
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('right', $merger('left', 'right'));
+            $this->assertEquals('right', $merger('left', 'right'));
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('left', $merger('left', 'right'));
+        } else {
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('left', $merger('left', 'right'));
+            $this->assertEquals('right', $merger('left', 'right'));
+            $this->assertEquals('right', $merger('left', 'right'));
+            $this->assertEquals('right', $merger('left', 'right'));
+            $this->assertEquals('right', $merger('left', 'right'));
+        }
     }
 }

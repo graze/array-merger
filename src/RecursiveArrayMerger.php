@@ -2,7 +2,6 @@
 
 namespace Graze\ArrayMerger;
 
-use Graze\ArrayMerger\ValueMerger\ArrayMergerInterface;
 use Graze\ArrayMerger\ValueMerger\LastValue;
 
 /**
@@ -19,16 +18,21 @@ use Graze\ArrayMerger\ValueMerger\LastValue;
 class RecursiveArrayMerger implements ArrayMergerInterface
 {
     use StaticMethodsTrait;
+    use SequentialTrait;
 
     /** @var callable */
     protected $valueMerger;
+    /** @var int */
+    private $flags;
 
     /**
      * @param callable $valueMerger
+     * @param int      $flags one of ArrayMergerInterface::FLAG_*
      */
-    public function __construct(callable $valueMerger = null)
+    public function __construct(callable $valueMerger = null, $flags = 0)
     {
         $this->valueMerger = $valueMerger ?: new LastValue();
+        $this->flags = $flags;
     }
 
     /**
@@ -36,29 +40,37 @@ class RecursiveArrayMerger implements ArrayMergerInterface
      *
      * @param callable $valueMerger
      * @param array    $array1
-     * @param array    ...$arrays
+     * @param array    $arrays
      *
      * @return array
      */
-    public static function mergeUsing(callable $valueMerger, array $array1, array ...$arrays)
+    public static function mergeUsing(callable $valueMerger, array $array1, array $arrays)
     {
         $merger = new static($valueMerger);
-        return $merger->merge($array1, ...$arrays);
+        return call_user_func_array([$merger, 'merge'], array_merge([$array1], array_slice(func_get_args(), 2)));
     }
 
     /**
      * Merge the values from all the array supplied, the first array is treated as the base array to merge into
      *
-     * @param array $array1
-     * @param array ...$arrays List of arrays to merge
+     * @param array      $array1
+     * @param array|null $arrays
      *
      * @return array
      */
-    public function merge(array $array1, array ...$arrays)
+    public function merge(array $array1, array $arrays = null)
     {
+        $arrays = array_slice(func_get_args(), 1);
         if (count($arrays) === 0) {
             return $array1;
         }
+
+        // if all arrays are sequential and flag is set, append them all
+        if ($this->flags & static::FLAG_APPEND_VALUE_ARRAY == static::FLAG_APPEND_VALUE_ARRAY
+            && $this->areSequential(array_merge([$array1], $arrays))) {
+            return call_user_func_array('array_merge', array_merge([$array1], $arrays));
+        }
+
         $merged = $array1;
 
         foreach ($arrays as $toMerge) {

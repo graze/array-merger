@@ -19,7 +19,7 @@ class SumValue implements ValueMergerInterface
 {
     use InvokeMergeTrait;
 
-    /*** @var ValueMergerInterface */
+    /** @var ValueMergerInterface */
     private $backup;
 
     /**
