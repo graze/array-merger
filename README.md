@@ -16,14 +16,14 @@ Array Merge allows you to recursively merge arrays and choose how the values sho
 The php function: [`array_merge_recursive`](http://php.net/manual/en/function.array-merge-recursive.php)
 does indeed merge arrays, but it converts values with duplicate keys to arrays rather than overwriting the value in
 the first array with the duplicate value in the second array, as array_merge does. I.e., with array_merge_recursive,
-this happens (documented behavior):
+this happens (documented behaviour):
 
 ```php
 array_merge_recursive(['key' => 'org value'], ['key' => 'new value']);
 // ['key' => ['org value', 'new value']];
 ```
 
-This allows you to get the value you actually want
+This library allows you to get the value you actually want
 
 ```php
 RecursiveArrayMerger::last(['key' => 'org value'], ['key' => 'new value']);
@@ -40,7 +40,7 @@ composer require graze/array-merger
 
 ## Value Mergers
 
-- **LastValue**: Takes the last value
+- **LastValue**: Takes the last value (default)
 - **LastNonNullValue**: Takes the last value, unless it is null then the first
 - **FirstValue**: Takes the first value
 - **FirstNonNullValue**: Takes the first value, unless it is null, then the second
@@ -54,6 +54,9 @@ composer require graze/array-merger
 There is an `ArrayMerger` which will only merge at the top level, and a `RecursiveArrayMerger` which will merge
 recursively.
 
+The mergers can take any number of arguments, and will treat the first argument as the base array to merge the
+subsequent arrays into.
+
 ```php
 $merger = new Graze\ArrayMerger\ArrayMerger();
 $merger->merge(
@@ -65,29 +68,16 @@ $merger->merge(
 $merger = new Graze\ArrayMerger\RecursiveArrayMerger();
 $merger->merge(
     ['a' => 'first', 'b' => ['c' => 'cake', 'd' => 'fish']],
-    ['a' => 'second', 'b' => ['d' => 'money']]
+    ['a' => 'second', 'b' => ['d' => 'money']],
+    ['a' => 'third', 'b' => ['e' => 'planets']],
 );
-// ['a' => 'second', 'b' => ['c' => 'cake', 'd' => 'money']]
-```
-
-### Calling Statically
-
-```php
-RecursiveArrayMerger::mergeUsing(
-    new LastValue(),
-    ['a' => 'first', 'b' => ['c' => 'cake', 'd' => 'fish']],
-    ['a' => 'second', 'b' => ['d' => 'money']]
-);
-// ['a' => 'second', 'b' => ['c' => 'cake', 'd' => 'money']]
-
-RecursiveArrayMerger::lastNonNull(
-    ['a' => 'first', 'b' => ['c' => 'cake', 'd' => 'fish']],
-    ['a' => null', 'b' => ['d' => 'money']]
-);
-// ['a' => 'first', 'b' => ['c' => 'cake', 'd' => 'money']]
+// ['a' => 'third', 'b' => ['c' => 'cake', 'd' => 'money', 'e' => 'planets]]
 ```
 
 ### Supplying a Value Merger
+
+By default the last value will be used when merging, however you can supply a different [Value Merger](#value-mergers)
+to change the behaviour of the merged value.
 
 ```php
 $merger = new Graze\ArrayMerger\RecursiveArrayMerger(new LastNonNullValue());
@@ -96,23 +86,59 @@ $merger->merge(
     ['a' => 'second', 'b' => ['d' => null]]
 );
 
-// ['a' => 'second', 'b' => ['c' => 'cake', 'd' => 'first']]
+// ['a' => 'second', 'b' => ['c' => 'cake', 'd' => 'fish']]
 ```
 
-The Value Merger is just a callable that can take 2 arguments. This allows you to do many different comparisons:
+The Value Merger is a `callable` that can take 2 arguments. This allows you to use in-built and in-line functions:
 
 ```php
-RecursiveArrayMerger::mergeUsing(
-    'max',
+$merger = new Graze\ArrayMerger\RecursiveArrayMerger('max');
+$merger->merge(
     ['a' => 1, 'b' => ['c' => 2, 'd' => 3]],
     ['a' => 4, 'b' => ['d' => 1]]
 );
 // ['a' => 4, 'b' => ['c' => 2, 'd' => 3]]
+
+// or some strange value choose of your choice
+$merger = new Graze\ArrayMerger\RecursiveArrayMerger(
+    function ($a, $b) {
+        return $a % $b == 0 ? $a : $b;
+    }
+);
+$merger->merge(
+    ['a' => 1, 'b' => ['c' => 2, 'd' => 3]],
+    ['a' => 4, 'b' => ['d' => 1]]
+);
+// ['a' => 1, 'b' => ['c' => 2, 'd' => 0]]
 ```
 
-### Sequential Arrays
+### Calling Statically
 
-If instead of overwriting sequential arrays you can append them using a flag
+You can call merge statically and specify the Value Merger of your choice:
+
+```php
+RecursiveArrayMerger::mergeUsing(
+    new LastValue(),
+    ['a' => 'first', 'b' => ['c' => 'cake', 'd' => 'fish']],
+    ['a' => 'second', 'b' => ['d' => 'money']]
+);
+// ['a' => 'second', 'b' => ['c' => 'cake', 'd' => 'money']]
+```
+
+Each of the supplied value mergers also have static helper methods to call them:
+
+```php
+RecursiveArrayMerger::lastNonNull(
+    ['a' => 'first', 'b' => ['c' => 'cake', 'd' => 'fish']],
+    ['a' => null, 'b' => ['d' => 'money']]
+);
+// ['a' => 'first', 'b' => ['c' => 'cake', 'd' => 'money']]
+```
+
+### Value Arrays
+
+By default value arrays (arrays with no indexes supplied) will be treated as associated arrays and have their keys
+merged. To append the second item instead, you can supply a flag:
 
 ```php
 $merger = new Graze\ArrayMerger\RecursiveArrayMerger(new LastValue(), RecursiveArrayMerger::FLAG_APPEND_VALUE_ARRAY);
