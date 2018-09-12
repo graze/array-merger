@@ -7,7 +7,7 @@
 [![Quality Score](https://img.shields.io/scrutinizer/g/graze/array-merger.svg?style=flat-square)](https://scrutinizer-ci.com/g/graze/array-merger)
 [![Total Downloads](https://img.shields.io/packagist/dt/graze/array-merger.svg?style=flat-square)](https://packagist.org/packages/graze/array-merger)
 
-Array Merge allows you to recursively merge arrays and choose how the values should be merged.
+Array Merger allows you to recursively merge arrays and choose how the values should be merged.
 
 ![Merge](https://media.giphy.com/media/cnEXDpXvkZ7lm/giphy.gif)
 
@@ -16,18 +16,27 @@ Array Merge allows you to recursively merge arrays and choose how the values sho
 The php function: [`array_merge_recursive`](http://php.net/manual/en/function.array-merge-recursive.php)
 does indeed merge arrays, but it converts values with duplicate keys to arrays rather than overwriting the value in
 the first array with the duplicate value in the second array, as array_merge does. I.e., with array_merge_recursive,
-this happens (documented behaviour):
+this happens (documented behaviour).
 
 ```php
-array_merge_recursive(['key' => 'org value'], ['key' => 'new value']);
-// ['key' => ['org value', 'new value']];
+array_merge_recursive(['key' => 'org value', 'key2' => 'first'], ['key' => 'new value', 'key2' => null]);
+// ['key' => ['org value', 'new value'], 'key2' => ['first', null]];
 ```
 
-This library allows you to get the value you actually want
+There is also [`array_replace_recursive`](http://php.net/manual/en/function.array-replace-recursive.php)
+which replaces values in the first with values in the second, but it handles value arrays differently and only supports
+replacing with the last value.
 
 ```php
-RecursiveArrayMerger::last(['key' => 'org value'], ['key' => 'new value']);
-// ['key' => 'new value'];
+array_replace_recursive(['key' => 'org value', 'key2' => 'first'], ['key' => 'new value', 'key2' => null]);
+// ['key' => 'new value', 'key2' => null];
+```
+
+This library gives you the flexibility to ensure you get the values you actually want in the merge.
+
+```php
+RecursiveArrayMerger::lastNonNull(['key' => 'org value', 'key2' => 'first'], ['key' => 'new value', 'key2' => null]);
+// ['key' => 'new value', 'key2' => 'first']);
 ```
 
 ## Install
@@ -40,14 +49,14 @@ composer require graze/array-merger
 
 ## Value Mergers
 
-- **LastValue**: Takes the last value (default)
+- **LastValue**: Takes the last value (default) _equivalent to `array_replace_recursive`_
 - **LastNonNullValue**: Takes the last value, unless it is null then the first
 - **FirstValue**: Takes the first value
 - **FirstNonNullValue**: Takes the first value, unless it is null, then the second
 - **RandomValue**: Takes a random value
 - **SumValue**: If both values are numeric, will add them together
 - **ProductValue**: If both values are numeric, will multiply them together
-- **BothValues**: Will return both values in an array, (same as `array_merge_recursive`)
+- **BothValues**: Will return both values in an array, _equivalent to `array_merge_recursive`_
 
 ## Usage
 
@@ -137,15 +146,36 @@ RecursiveArrayMerger::lastNonNull(
 
 ### Value Arrays
 
-By default value arrays (arrays with no indexes supplied) will be treated as associated arrays and have their keys
-merged. To append the second item instead, you can supply a flag:
+By default value arrays (arrays with no indexes supplied) will be appended onto each other, if you want to treat them
+as associative arrays, you can supply this flag: `RecursiveArrayMerger::FLAG_MERGE_VALUE_ARRAY`.
 
 ```php
-$merger = new Graze\ArrayMerger\RecursiveArrayMerger(new LastValue(), RecursiveArrayMerger::FLAG_APPEND_VALUE_ARRAY);
-$merger->merge(
-    ['a' => 'first', 'b' => ['a','c','d']],
-    ['a' => 'second', 'b' => ['e']]
-);
+$a = ['a' => 'first', 'b' => ['a','c','d']];
+$b = ['a' => 'second', 'b' => ['e']];
+$merger = new Graze\ArrayMerger\RecursiveArrayMerger(new LastValue());
+$merger->merge($a,$b);
+// ['a' => 'second', 'b' => ['a','c','d','e']]
+
+$merger = new Graze\ArrayMerger\RecursiveArrayMerger(new LastValue(), RecursiveArrayMerger::FLAG_MERGE_VALUE_ARRAY);
+$merger->merge($a,$b);
+// ['a' => 'second', 'b' => ['e','c','d']]
+```
+
+#### Unique Values
+
+By default, when we append value arrays it will keep duplicate values. If you want to remove the duplicate values you
+can supply the flag: `RecursiveArrayMerger::FLAG_UNIQUE_VALUE_ARRAY`.
+This flag will only be relevant if the `RecursiveArrayMerger::FLAG_MERGE_VALUE_ARRAY` flag is not supplied.
+
+```php
+$a = ['a' => 'first', 'b' => ['a','c','d']];
+$b = ['a' => 'second', 'b' => ['d','e']];
+$merger = new Graze\ArrayMerger\RecursiveArrayMerger(new LastValue());
+$merger->merge($a,$b);
+// ['a' => 'second', 'b' => ['a','c','d','d','e']]
+
+$merger = new Graze\ArrayMerger\RecursiveArrayMerger(new LastValue(), RecursiveArrayMerger::FLAG_UNIQUE_VALUE_ARRAY);
+$merger->merge($a,$b);
 // ['a' => 'second', 'b' => ['a','c','d','e']]
 ```
 

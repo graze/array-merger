@@ -11,8 +11,36 @@ use Graze\ArrayMerger\ValueMerger\ProductValue;
 use Graze\ArrayMerger\ValueMerger\RandomValue;
 use Graze\ArrayMerger\ValueMerger\SumValue;
 
-trait StaticMethodsTrait
+trait MergeHelpersTrait
 {
+    use SequentialTrait;
+    use FlagTrait;
+
+    /**
+     * @param array $array1
+     * @param array $arrays
+     *
+     * @return array
+     */
+    protected function checkSimpleMerge(array $array1, array $arrays = [])
+    {
+        if (count($arrays) === 0) {
+            return [$array1, []];
+        }
+
+        // if all arrays are sequential and merge flag is not set, append them all
+        if (!$this->isFlagSet(ArrayMergerInterface::FLAG_MERGE_VALUE_ARRAY)
+            && $this->areSequential(array_merge([$array1], $arrays))) {
+            $merged = call_user_func_array('array_merge', array_merge([$array1], $arrays));
+            if ($this->isFlagSet(ArrayMergerInterface::FLAG_UNIQUE_VALUE_ARRAY)) {
+                $merged = array_values(array_unique($merged));
+            }
+            return [$merged, []];
+        }
+
+        return [$array1, $arrays];
+    }
+
     /**
      * Merge using the FirstNonNull Value Merger
      *

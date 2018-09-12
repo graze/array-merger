@@ -4,26 +4,12 @@ namespace Graze\ArrayMerger;
 
 use Graze\ArrayMerger\ValueMerger\LastValue;
 
-/**
- * Class RecursiveArrayMerger
- *
- * array_merge_recursive does indeed merge arrays, but it converts values with duplicate
- * keys to arrays rather than overwriting the value in the first array with the duplicate
- * value in the second array, as array_merge does. I.e., with array_merge_recursive,
- * this happens (documented behavior):
- *
- * array_merge_recursive(array('key' => 'org value'), array('key' => 'new value'));
- *     => array('key' => array('org value', 'new value'));
- */
 class RecursiveArrayMerger implements ArrayMergerInterface
 {
-    use StaticMethodsTrait;
-    use SequentialTrait;
+    use MergeHelpersTrait;
 
     /** @var callable */
     protected $valueMerger;
-    /** @var int */
-    private $flags;
 
     /**
      * @param callable $valueMerger
@@ -60,18 +46,7 @@ class RecursiveArrayMerger implements ArrayMergerInterface
      */
     public function merge(array $array1, array $arrays = null)
     {
-        $arrays = array_slice(func_get_args(), 1);
-        if (count($arrays) === 0) {
-            return $array1;
-        }
-
-        // if all arrays are sequential and flag is set, append them all
-        if ($this->flags & static::FLAG_APPEND_VALUE_ARRAY == static::FLAG_APPEND_VALUE_ARRAY
-            && $this->areSequential(array_merge([$array1], $arrays))) {
-            return call_user_func_array('array_merge', array_merge([$array1], $arrays));
-        }
-
-        $merged = $array1;
+        list($merged, $arrays) = $this->checkSimpleMerge($array1, array_slice(func_get_args(), 1));
 
         foreach ($arrays as $toMerge) {
             foreach ($toMerge as $key => &$value) {

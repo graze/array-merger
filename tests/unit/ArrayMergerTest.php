@@ -75,31 +75,60 @@ class ArrayMergerTest extends TestCase
         $merger = new ArrayMerger(new FirstValue());
 
         $this->assertEquals(
-            ['first', 'second'],
-            $merger->merge($a, $b),
-            "Expected a non appended array when the flag is not set"
-        );
-
-        $merger = new ArrayMerger(new FirstValue(), ArrayMerger::FLAG_APPEND_VALUE_ARRAY);
-
-        $this->assertEquals(
             ['first', 'second', 'third', 'fourth'],
             $merger->merge($a, $b),
             "Expected appended array"
         );
-    }
-
-    public function testSequentialChildArraysAreAppended()
-    {
-        $a = ['first' => ['a','c','d'], 'second' => 2];
-        $b = ['first' => ['b','e'], 'second' => null];
-
-        $merger = new ArrayMerger(new FirstValue(), ArrayMerger::FLAG_APPEND_VALUE_ARRAY);
+        $merger = new ArrayMerger(new FirstValue(), ArrayMerger::FLAG_MERGE_VALUE_ARRAY);
 
         $this->assertEquals(
-            ['first' => ['a','c','d','b','e'], 'second' => 2],
+            ['first', 'second'],
+            $merger->merge($a, $b),
+            "Expected a non appended array when the flag is not set"
+        );
+    }
+
+    public function testSequentialChildArraysAreNotAppendedBecauseThisIsNotRecursive()
+    {
+        $a = ['first' => ['a', 'c', 'd'], 'second' => 2];
+        $b = ['first' => ['b', 'e'], 'second' => null];
+
+        $merger = new ArrayMerger(new LastValue());
+
+        $this->assertEquals(
+            ['first' => ['b', 'e'], 'second' => null],
             $merger->merge($a, $b),
             "Expected appended child array"
+        );
+
+        $merger = new ArrayMerger(new LastValue(), ArrayMerger::FLAG_MERGE_VALUE_ARRAY);
+
+        $this->assertEquals(
+            ['first' => ['b', 'e'], 'second' => null],
+            $merger->merge($a, $b),
+            "Expected merged child array"
+        );
+    }
+
+    public function testSequentialTopLevelArraysCanBeUnique()
+    {
+        $a = ['first', 'second'];
+        $b = ['second', 'third'];
+
+        $merger = new ArrayMerger(new FirstValue());
+
+        $this->assertEquals(
+            ['first', 'second', 'second', 'third'],
+            $merger->merge($a, $b),
+            "Expected duplicated second value"
+        );
+
+        $merger = new ArrayMerger(new FirstValue(), ArrayMerger::FLAG_UNIQUE_VALUE_ARRAY);
+
+        $this->assertEquals(
+            ['first', 'second', 'third'],
+            $merger->merge($a, $b),
+            "Expected unique output"
         );
     }
 

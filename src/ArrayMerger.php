@@ -11,13 +11,10 @@ use Graze\ArrayMerger\ValueMerger\LastValue;
  */
 class ArrayMerger implements ArrayMergerInterface
 {
-    use StaticMethodsTrait;
-    use SequentialTrait;
+    use MergeHelpersTrait;
 
     /** @var callable */
     protected $valueMerger;
-    /** @var int */
-    private $flags;
 
     /**
      * @param callable $valueMerger
@@ -54,28 +51,12 @@ class ArrayMerger implements ArrayMergerInterface
      */
     public function merge(array $array1, array $arrays = null)
     {
-        $arrays = array_slice(func_get_args(), 1);
-        if (count($arrays) === 0) {
-            return $array1;
-        }
-
-        // if all arrays are sequential and flag is set, append them all
-        if ($this->flags & static::FLAG_APPEND_VALUE_ARRAY == static::FLAG_APPEND_VALUE_ARRAY
-            && $this->areSequential(array_merge([$array1], $arrays))) {
-            return call_user_func_array('array_merge', array_merge([$array1], $arrays));
-        }
-
-        $merged = $array1;
+        list($merged, $arrays) = $this->checkSimpleMerge($array1, array_slice(func_get_args(), 1));
 
         foreach ($arrays as $toMerge) {
             foreach ($toMerge as $key => &$value) {
                 if (array_key_exists($key, $merged)) {
-                    if ($this->flags & static::FLAG_APPEND_VALUE_ARRAY == static::FLAG_APPEND_VALUE_ARRAY
-                        && $this->areSequential([$value, $merged[$key]])) {
-                        $merged[$key] = array_merge($merged[$key], $value);
-                    } else {
-                        $merged[$key] = call_user_func($this->valueMerger, $merged[$key], $value);
-                    }
+                    $merged[$key] = call_user_func($this->valueMerger, $merged[$key], $value);
                 } else {
                     $merged[$key] = $value;
                 }

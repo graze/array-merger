@@ -75,17 +75,16 @@ class RecursiveArrayMergerTest extends TestCase
         $merger = new RecursiveArrayMerger(new FirstValue());
 
         $this->assertEquals(
-            ['first', 'second'],
-            $merger->merge($a, $b),
-            "Expected appended array"
-        );
-
-        $merger = new RecursiveArrayMerger(new FirstValue(), RecursiveArrayMerger::FLAG_APPEND_VALUE_ARRAY);
-
-        $this->assertEquals(
             ['first', 'second', 'third', 'fourth'],
             $merger->merge($a, $b),
             "Expected appended array"
+        );
+        $merger = new RecursiveArrayMerger(new FirstValue(), RecursiveArrayMerger::FLAG_MERGE_VALUE_ARRAY);
+
+        $this->assertEquals(
+            ['first', 'second'],
+            $merger->merge($a, $b),
+            "Expected merged array"
         );
     }
 
@@ -94,10 +93,62 @@ class RecursiveArrayMergerTest extends TestCase
         $a = ['first' => ['child' => ['a', 'c', 'd']], 'second' => 2];
         $b = ['first' => ['child' => ['b', 'e']], 'second' => null];
 
-        $merger = new RecursiveArrayMerger(new FirstValue(), RecursiveArrayMerger::FLAG_APPEND_VALUE_ARRAY);
+        $merger = new RecursiveArrayMerger(new LastValue());
 
         $this->assertEquals(
-            ['first' => ['child' => ['a', 'c', 'd', 'b', 'e']], 'second' => 2],
+            ['first' => ['child' => ['a', 'c', 'd', 'b', 'e']], 'second' => null],
+            $merger->merge($a, $b),
+            "Expected appended child array"
+        );
+
+        $merger = new RecursiveArrayMerger(new LastValue(), RecursiveArrayMerger::FLAG_MERGE_VALUE_ARRAY);
+
+        $this->assertEquals(
+            ['first' => ['child' => ['b', 'e', 'd']], 'second' => null],
+            $merger->merge($a, $b),
+            "Expected merged child array"
+        );
+    }
+
+    public function testSequentialTopLevelArraysCanBeUnique()
+    {
+        $a = ['first', 'second'];
+        $b = ['second', 'third'];
+
+        $merger = new RecursiveArrayMerger(new LastValue());
+
+        $this->assertEquals(
+            ['first', 'second', 'second', 'third'],
+            $merger->merge($a, $b),
+            "Expected duplicated array"
+        );
+
+        $merger = new RecursiveArrayMerger(new LastValue(), RecursiveArrayMerger::FLAG_UNIQUE_VALUE_ARRAY);
+
+        $this->assertEquals(
+            ['first', 'second', 'third'],
+            $merger->merge($a, $b),
+            "Expected unique array"
+        );
+    }
+
+    public function testSequentialChildArraysCanBeUnique()
+    {
+        $a = ['first' => ['child' => ['a', 'c', 'd']], 'second' => 2];
+        $b = ['first' => ['child' => ['d', 'e']], 'second' => null];
+
+        $merger = new RecursiveArrayMerger(new FirstValue());
+
+        $this->assertEquals(
+            ['first' => ['child' => ['a', 'c', 'd', 'd', 'e']], 'second' => 2],
+            $merger->merge($a, $b),
+            "Expected merged child array"
+        );
+
+        $merger = new RecursiveArrayMerger(new FirstValue(), RecursiveArrayMerger::FLAG_UNIQUE_VALUE_ARRAY);
+
+        $this->assertEquals(
+            ['first' => ['child' => ['a', 'c', 'd', 'e']], 'second' => 2],
             $merger->merge($a, $b),
             "Expected appended child array"
         );
