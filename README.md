@@ -19,7 +19,9 @@ the first array with the duplicate value in the second array, as array_merge doe
 this happens (documented behaviour).
 
 ```php
-array_merge_recursive(['key' => 'org value', 'key2' => 'first'], ['key' => 'new value', 'key2' => null]);
+$a = ['key' => 'org value', 'key2' => 'first'];
+$b = ['key' => 'new value', 'key2' => null];
+array_merge_recursive($a, $b);
 // ['key' => ['org value', 'new value'], 'key2' => ['first', null]];
 ```
 
@@ -28,14 +30,14 @@ which replaces values in the first with values in the second, but it handles val
 replacing with the last value.
 
 ```php
-array_replace_recursive(['key' => 'org value', 'key2' => 'first'], ['key' => 'new value', 'key2' => null]);
+array_replace_recursive($a, $b);
 // ['key' => 'new value', 'key2' => null];
 ```
 
 This library gives you the flexibility to ensure you get the values you actually want in the merge.
 
 ```php
-RecursiveArrayMerger::lastNonNull(['key' => 'org value', 'key2' => 'first'], ['key' => 'new value', 'key2' => null]);
+RecursiveArrayMerger::lastNonNull($a, $b);
 // ['key' => 'new value', 'key2' => 'first']);
 ```
 

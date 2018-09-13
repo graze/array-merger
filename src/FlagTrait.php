@@ -5,7 +5,17 @@ namespace Graze\ArrayMerger;
 trait FlagTrait
 {
     /** @var int */
-    protected $flags;
+    private $flags;
+
+    /**
+     * Set the flags to be checked against
+     *
+     * @param int $flags
+     */
+    protected function setFlags($flags)
+    {
+        $this->flags = $flags;
+    }
 
     /**
      * Is the provided flag set?

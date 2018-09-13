@@ -23,7 +23,7 @@ class ArrayMerger implements ArrayMergerInterface
     public function __construct(callable $valueMerger = null, $flags = 0)
     {
         $this->valueMerger = $valueMerger ?: new LastValue();
-        $this->flags = $flags;
+        $this->setFlags($flags);
     }
 
     /**
